@@ -2,4 +2,7 @@
     <string name="app_name">Hungry</string>
     <string name="search_friends">Search friends</string>
     <string name="invite">Invite</string>
+    <string name="login_title">Welcome to Hungry</string>
+    <string name="login_subtitle">can put something here later</string>
+    <string name="continue_guest">Continue as Guest</string>
 </resources>

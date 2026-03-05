@@ -19,7 +19,7 @@ fun HungryNavGraph(navController: NavHostController, modifier: Modifier = Modifi
         composable(Screen.Hungry.route) { SwipeScreen() }
         composable(Screen.Favorite.route) { FavoritesScreen() }
         composable(Screen.Map.route) { MapScreen() }
-        composable(Screen.Friend.route) { GroupScreen() }
+        composable(Screen.Friend.route) { FriendsScreen() }
         composable(Screen.Profile.route) { ProfileScreen() }
     }
 }
