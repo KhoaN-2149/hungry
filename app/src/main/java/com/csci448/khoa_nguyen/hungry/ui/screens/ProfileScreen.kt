@@ -46,7 +46,7 @@ fun ProfileScreen() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background) // Use the defined background color
+                .background(MaterialTheme.colorScheme.background)
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

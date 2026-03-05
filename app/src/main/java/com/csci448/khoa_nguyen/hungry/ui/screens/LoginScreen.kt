@@ -5,49 +5,32 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.csci448.khoa_nguyen.hungry.R
 
 @Composable
-fun LoginScreen(
-    onContinueAsGuest: () -> Unit = {}
-) {
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+fun LoginScreen(onLoginClick: () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "Hungry",
+                style = MaterialTheme.typography.displayLarge,
+                color = Color(0xFFD32F2F),
+                fontWeight = FontWeight.Bold
+            )
 
-        Text(
-            text = stringResource(R.string.login_title),
-            style = MaterialTheme.typography.headlineMedium
-        )
+            Spacer(modifier = Modifier.height(32.dp))
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = stringResource(R.string.login_subtitle),
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
-            onClick = onContinueAsGuest,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(stringResource(R.string.continue_guest))
+            Button(
+                onClick = onLoginClick,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+            ) {
+                Text("Continue as Guest", color = Color.White)
+            }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    LoginScreen()
 }

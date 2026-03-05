@@ -2,7 +2,9 @@ package com.csci448.khoa_nguyen.hungry.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Star
@@ -13,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.csci448.khoa_nguyen.hungry.data.models.MenuItem
 import com.csci448.khoa_nguyen.hungry.data.models.Restaurant
 
 @Composable
@@ -20,18 +23,21 @@ fun RestaurantCard(restaurant: Restaurant, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.7f) // Takes up 70% of the screen height
+            .fillMaxHeight(0.85f)
             .padding(16.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        Column {
+
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState())
+        ) {
             // Placeholder for the restaurant image
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    .height(250.dp)
                     .background(Color.LightGray),
                 contentAlignment = Alignment.Center
             ) {
@@ -43,11 +49,11 @@ fun RestaurantCard(restaurant: Restaurant, modifier: Modifier = Modifier) {
                 )
             }
 
-            // Text Details at the bottom of the card
+            // Header Info (Name, Rating, Price)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFD32F2F)) // Appetite-inducing Red!
+                    .background(Color(0xFFD32F2F))
                     .padding(16.dp)
             ) {
                 Text(
@@ -69,6 +75,41 @@ fun RestaurantCard(restaurant: Restaurant, modifier: Modifier = Modifier) {
                     Text(text = restaurant.price, color = Color.White, fontWeight = FontWeight.Bold)
                 }
             }
+
+            // The New Menu Section
+            if (restaurant.menu.isNotEmpty()) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Popular Items",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+
+                    restaurant.menu.forEach { item ->
+                        MenuItemRow(item)
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.LightGray)
+                    }
+                }
+            }
         }
+    }
+}
+
+@Composable
+fun MenuItemRow(item: MenuItem) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = item.name, fontWeight = FontWeight.SemiBold, color = Color.Black)
+            Text(text = item.description, style = MaterialTheme.typography.bodyMedium, color = Color.DarkGray)
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = item.price, fontWeight = FontWeight.Bold, color = Color(0xFFD32F2F))
     }
 }
