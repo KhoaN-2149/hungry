@@ -14,6 +14,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.csci448.khoa_nguyen.hungry.R
+import com.csci448.khoa_nguyen.hungry.ui.theme.Red
+import com.csci448.khoa_nguyen.hungry.ui.theme.White
 
 data class Friend(
     val name: String,
@@ -22,6 +24,7 @@ data class Friend(
 
 @Composable
 fun FriendsScreen() {
+
     val friends = listOf(
         Friend("A", "A bio"),
         Friend("B", "B bio"),
@@ -29,6 +32,7 @@ fun FriendsScreen() {
         Friend("D", "D bio"),
         Friend("E", "E bio")
     )
+
     var searchText by remember { mutableStateOf("") }
 
     val filteredFriends = friends.filter {
@@ -37,6 +41,7 @@ fun FriendsScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(White)
             .padding(16.dp)
     ) {
         // Search Bar
@@ -44,6 +49,11 @@ fun FriendsScreen() {
             value = searchText,
             onValueChange = { searchText = it },
             label = { Text(stringResource(R.string.search_friends)) },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Red,
+                focusedLabelColor = Red,
+                cursorColor = Red
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 12.dp)
@@ -51,6 +61,9 @@ fun FriendsScreen() {
         LazyColumn {
             items(filteredFriends) { friend ->
                 Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = White
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 6.dp)
@@ -65,16 +78,25 @@ fun FriendsScreen() {
                         Box(
                             modifier = Modifier
                                 .size(48.dp)
-                                .background(Color.Gray, CircleShape)
+                                .background(Red, CircleShape)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(text = friend.name)
-                            Text(text = friend.status, color = Color.Gray)
+                            Text(
+                                text = friend.status,
+                                color = Color.Gray
+                            )
                         }
-                        Button(onClick = { /* invite later */ }) {
+                        Button(
+                            onClick = { /* invite later */ },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Red,
+                                contentColor = White
+                            )
+                        ) {
                             Text(stringResource(R.string.invite))
                         }
                     }
