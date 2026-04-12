@@ -1,3 +1,5 @@
+//com/csci448/khoa_nguyen/hungry/HungryApp.kt
+
 package com.csci448.khoa_nguyen.hungry
 
 import androidx.compose.foundation.layout.padding

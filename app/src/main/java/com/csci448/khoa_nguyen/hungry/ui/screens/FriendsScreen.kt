@@ -5,17 +5,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.csci448.khoa_nguyen.hungry.R
-import com.csci448.khoa_nguyen.hungry.ui.theme.Red
-import com.csci448.khoa_nguyen.hungry.ui.theme.White
+import com.csci448.khoa_nguyen.hungry.ui.theme.HungryTheme
 
 data class Friend(
     val name: String,
@@ -38,10 +38,11 @@ fun FriendsScreen() {
     val filteredFriends = friends.filter {
         it.name.contains(searchText, ignoreCase = true)
     }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(White)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
         // Search Bar
@@ -50,9 +51,9 @@ fun FriendsScreen() {
             onValueChange = { searchText = it },
             label = { Text(stringResource(R.string.search_friends)) },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Red,
-                focusedLabelColor = Red,
-                cursorColor = Red
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                cursorColor = MaterialTheme.colorScheme.primary
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -62,7 +63,8 @@ fun FriendsScreen() {
             items(filteredFriends) { friend ->
                 Card(
                     colors = CardDefaults.cardColors(
-                        containerColor = White
+                        // Uses the light pink-red variant we set up in Theme.kt
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -78,23 +80,36 @@ fun FriendsScreen() {
                         Box(
                             modifier = Modifier
                                 .size(48.dp)
-                                .background(Red, CircleShape)
-                        )
+                                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Avatar Placeholder",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text(text = friend.name)
+                            Text(
+                                text = friend.name,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.titleMedium
+                            )
                             Text(
                                 text = friend.status,
-                                color = Color.Gray
+                                // Slightly fade the text for the status bio
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                style = MaterialTheme.typography.bodyMedium
                             )
                         }
                         Button(
                             onClick = { /* invite later */ },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Red,
-                                contentColor = White
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             )
                         ) {
                             Text(stringResource(R.string.invite))
@@ -109,5 +124,7 @@ fun FriendsScreen() {
 @Preview(showBackground = true)
 @Composable
 fun FriendsScreenPreview() {
-    FriendsScreen()
+    HungryTheme {
+        FriendsScreen()
+    }
 }

@@ -10,6 +10,10 @@ val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
-val Red = Color(0xFFD32F2F)
-
-val White = Color(0xFFFFFFFF)
+// Hungry App Custom Colors
+val HungryRed = Color(0xFFE53935)
+val HungryOnRed = Color.White
+val HungryRedVariant = Color(0xFFFFEBEE)
+val HungryDarkRed = Color(0xFFB71C1C)
+val HungrySurface = Color.White
+val HungryOnSurface = Color(0xFF212121)

@@ -1,3 +1,4 @@
+//com/csci448/khoa_nguyen/hungry/ui/components/RestaurantCard.kt
 package com.csci448.khoa_nguyen.hungry.ui.components
 
 import androidx.compose.foundation.background

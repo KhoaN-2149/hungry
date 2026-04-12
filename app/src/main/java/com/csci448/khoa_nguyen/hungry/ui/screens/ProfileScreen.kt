@@ -6,7 +6,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -15,124 +15,105 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-private val HungryRed = Color(0xFFE53935)      // Main primary red
-private val HungryOnRed = Color.White           // Text on top of red
-private val HungryRedVariant = Color(0xFFFFEBEE) // Very light pink-red
-private val HungryDarkRed = Color(0xFFB71C1C)  // Darker text
-private val HungrySurface = Color.White        // Main background
-private val HungryOnSurface = Color(0xFF212121)// Main text color
-
-private val hungryLightColorScheme = lightColorScheme(
-    primary = HungryRed,
-    onPrimary = HungryOnRed,
-    primaryContainer = HungryRedVariant,
-    onPrimaryContainer = HungryDarkRed,
-    surface = HungrySurface,
-    onSurface = HungryOnSurface,
-    surfaceVariant = HungryRedVariant,
-    onSurfaceVariant = HungryDarkRed,
-    background = HungrySurface,
-    onBackground = HungryOnSurface
-)
+import com.csci448.khoa_nguyen.hungry.ui.theme.HungryTheme
 
 @Composable
-fun ProfileScreen() {
-    var isVegetarian by remember { mutableStateOf(false) }
-    var isSpicyOnly by remember { mutableStateOf(true) }
-    var isGlutenFree by remember { mutableStateOf(false) }
+fun ProfileScreen(
+    isVegetarian: Boolean,
+    isSpicyOnly: Boolean,
+    isGlutenFree: Boolean,
+    onVegetarianChanged: (Boolean) -> Unit,
+    onSpicyOnlyChanged: (Boolean) -> Unit,
+    onGlutenFreeChanged: (Boolean) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.height(48.dp))
 
-    MaterialTheme(colorScheme = hungryLightColorScheme) {
-        Column(
+        // Avatar Image
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .size(120.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
         ) {
-            Spacer(modifier = Modifier.height(48.dp))
-
-            // Avatar Image
-            Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Dummy Profile Picture",
-                    modifier = Modifier.size(80.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Username & Stuff
-            Text(
-                text = "HungryFatHippo67",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = "Dummy Profile Picture",
+                modifier = Modifier.size(80.dp),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
             )
+        }
 
-            Text(
-                text = "Foodie Level: Expert",
-                fontSize = 16.sp,
-                color = Color.Gray
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Username & Stuff
+        Text(
+            text = "HungryFatHippo67",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+
+        Text(
+            text = "Foodie Level: Expert",
+            fontSize = 16.sp,
+            color = Color.Gray
+        )
+
+        Spacer(modifier = Modifier.height(48.dp))
+
+        // Dietary Preferences
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
             )
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            // Dietary Preferences
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(
-                        text = "Dietary Preferences",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
+                Text(
+                    text = "Dietary Preferences",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
 
-                    // Reusable Toggle Components
-                    PreferenceToggle(
-                        label = "Vegetarian",
-                        isChecked = isVegetarian,
-                        onCheckedChange = { isVegetarian = it }
-                    )
+                PreferenceToggle(
+                    label = "Vegetarian",
+                    isChecked = isVegetarian,
+                    onCheckedChange = onVegetarianChanged
+                )
 
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f) // Light red divider
-                    )
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
+                )
 
-                    PreferenceToggle(
-                        label = "Spicy Only",
-                        isChecked = isSpicyOnly,
-                        onCheckedChange = { isSpicyOnly = it }
-                    )
+                PreferenceToggle(
+                    label = "Spicy Only",
+                    isChecked = isSpicyOnly,
+                    onCheckedChange = onSpicyOnlyChanged
+                )
 
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
-                    )
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
+                )
 
-                    PreferenceToggle(
-                        label = "Gluten Free",
-                        isChecked = isGlutenFree,
-                        onCheckedChange = { isGlutenFree = it }
-                    )
-                }
+                PreferenceToggle(
+                    label = "Gluten Free",
+                    isChecked = isGlutenFree,
+                    onCheckedChange = onGlutenFreeChanged
+                )
             }
         }
     }
@@ -152,7 +133,7 @@ fun PreferenceToggle(
         Text(
             text = label,
             fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant // Dark Red
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Switch(
             checked = isChecked,
@@ -164,7 +145,14 @@ fun PreferenceToggle(
 @Preview(showBackground = true, showSystemUi = true, name = "Hungry Profile Screen")
 @Composable
 fun ProfileScreenPreview() {
-    MaterialTheme(colorScheme = hungryLightColorScheme) {
-        ProfileScreen()
+    HungryTheme {
+        ProfileScreen(
+            isVegetarian = false,
+            isSpicyOnly = true,
+            isGlutenFree = false,
+            onVegetarianChanged = {},
+            onSpicyOnlyChanged = {},
+            onGlutenFreeChanged = {}
+        )
     }
 }

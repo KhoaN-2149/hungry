@@ -1,3 +1,5 @@
+////com/csci448/khoa_nguyen/hungry/data/models/Restaurant.kt
+
 package com.csci448.khoa_nguyen.hungry.data.models
 data class MenuItem(
     val name: String,
