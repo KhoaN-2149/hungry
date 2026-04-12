@@ -34,20 +34,16 @@ import com.csci448.khoa_nguyen.hungry.ui.components.SmallRestaurantCard
 
 @Composable
 fun MapScreen() {
-    // 1. State for Zoom and Panning
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
 
-    // Smooth animations for when we click a restaurant
     val animatedScale by animateFloatAsState(targetValue = scale, label = "zoom")
     val animatedOffset by animateOffsetAsState(targetValue = offset, label = "pan")
 
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFE8EAE6))
             .clip(RectangleShape)
-            // 2. Add Pinch-to-Zoom and Dragging logic
             .pointerInput(Unit) {
                 detectTransformGestures { _, pan, zoom, _ ->
                     scale = (scale * zoom).coerceIn(1f, 5f)
@@ -58,24 +54,26 @@ fun MapScreen() {
         val width = constraints.maxWidth.toFloat()
         val height = constraints.maxHeight.toFloat()
 
-        // 3. The Actual Map Image (Replace R.drawable.golden_map with your actual resource name)
+        val focusOnRestaurant: (Restaurant) -> Unit = { rest ->
+            scale = 4f
+            offset = Offset(
+                x = (width / 2f) - (rest.xPct * width * scale),
+                y = (height / 2f) - (rest.yPct * height * scale)
+            )
+        }
+
         Image(
             painter = painterResource(id = R.drawable.golden_map),
-            contentDescription = "Golden Map Background",
+            contentDescription = null,
             contentScale = ContentScale.FillBounds,
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer(
-                    scaleX = animatedScale,
-                    scaleY = animatedScale,
-                    translationX = animatedOffset.x,
-                    translationY = animatedOffset.y
-                )
+            modifier = Modifier.fillMaxSize().graphicsLayer(
+                scaleX = animatedScale, scaleY = animatedScale,
+                translationX = animatedOffset.x, translationY = animatedOffset.y
+            )
         )
 
-        // 4. Floating Pins
+        // Draw Pins with Names
         dummyRestaurants.forEach { restaurant ->
-            // Use the percentages from your data model
             val xPos = restaurant.xPct * width
             val yPos = restaurant.yPct * height
 
@@ -84,63 +82,61 @@ fun MapScreen() {
                 modifier = Modifier
                     .offset {
                         IntOffset(
-                            x = (xPos * animatedScale + animatedOffset.x).toInt() - 50, // Center the pin
-                            y = (yPos * animatedScale + animatedOffset.y).toInt() - 100 // Offset so point touches spot
+                            x = (xPos * animatedScale + animatedOffset.x).toInt() - 60, // Widened to center label
+                            y = (yPos * animatedScale + animatedOffset.y).toInt() - 80
                         )
                     }
+                    .width(120.dp) // Fixed width helps centering the text under the icon
             ) {
-                Surface(
-                    shape = CircleShape,
-                    color = Color.White,
-                    shadowElevation = 4.dp,
-                    onClick = {
-                        // 5. CLICK LOGIC: Zoom in and center on the pin
-                        scale = 3.5f
-                        offset = Offset(
-                            x = (width / 2f) - (xPos * scale),
-                            y = (height / 2f) - (yPos * scale)
-                        )
-                    }
+                IconButton(
+                    onClick = { focusOnRestaurant(restaurant) },
+                    modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = restaurant.name,
-                        tint = Color(0xFFD32F2F),
-                        modifier = Modifier.padding(8.dp).size(32.dp)
+                        tint = Color.Red,
+                        modifier = Modifier.size(32.dp)
                     )
                 }
-                // Label that stays with the pin
-                Text(
-                    text = restaurant.name,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .background(Color.White.copy(alpha = 0.8f), RoundedCornerShape(4.dp))
-                        .padding(horizontal = 4.dp)
-                )
+
+                // Show name label
+                // Added a small alpha check so they fade in/out based on zoom
+                if (animatedScale > 1.5f) {
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = Color.White.copy(alpha = 0.9f),
+                        shadowElevation = 2.dp,
+                        modifier = Modifier.padding(top = 2.dp)
+                    ) {
+                        Text(
+                            text = restaurant.name,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            maxLines = 1
+                        )
+                    }
+                }
             }
         }
 
-        // 6. Keep your bottom list for navigation
+        // Bottom List
         LazyRow(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 20.dp),
             contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(dummyRestaurants) { restaurant ->
-                SmallRestaurantCard(restaurant)
+                Surface(
+                    onClick = { focusOnRestaurant(restaurant) },
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.Transparent
+                ) {
+                    SmallRestaurantCard(restaurant)
+                }
             }
-        }
-
-        // Reset Button to go back to full view
-        IconButton(
-            onClick = { scale = 1f; offset = Offset.Zero },
-            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp).background(Color.White, CircleShape)
-        ) {
-            Icon(Icons.Default.LocationOn, contentDescription = "Reset", tint = Color.Gray)
         }
     }
 }
