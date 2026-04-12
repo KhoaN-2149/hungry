@@ -14,24 +14,60 @@ data class Restaurant(
     val imageUrl: String,
     val rating: Double,
     val price: String,
-    val menu: List<MenuItem> = emptyList()
+    val menu: List<MenuItem> = emptyList(),
+    // Add these for the Map logic
+    val xPct: Float = 0f,
+    val yPct: Float = 0f
 )
 
 val dummyRestaurants = listOf(
     Restaurant(
         restId = "1",
-        name = "Taco Star",
+        name = "Xicamiti La Taquería",
         location = "Golden, CO",
         imageUrl = "",
-        rating = 4.5,
+        rating = 4.9,
         price = "$",
+        xPct = 0.42f, yPct = 0.35f, // Downtown Golden
         menu = listOf(
-            MenuItem("Spicy Breakfast Burrito", "Eggs, potatoes, cheese, and spicy green chile.", "$6.50"),
-            MenuItem("Carne Asada Fries", "Crispy fries topped with steak, guac, and cheese.", "$10.99"),
-            MenuItem("3 Rolled Tacos", "Crispy rolled tacos covered in cheese and guac.", "$5.00"),
-            MenuItem("Colorado Burrito", "Potatoes, steak, pico de gallo, and cheese.", "$8.50")
+            MenuItem("Street Tacos", "Choice of Al Pastor, Asada, or Pollo.", "$3.50"),
+            MenuItem("Quesabirria", "Slow-cooked beef with consomé.", "$12.00")
         )
     ),
-    Restaurant("2", "Woody's Wood Fired Pizza", "Golden, CO", "", 4.8, "$$"),
-    Restaurant("3", "Bonfire Burritos", "Golden, CO", "", 4.9, "$")
+    Restaurant(
+        restId = "2",
+        name = "Woody's Wood Fired Pizza",
+        location = "Golden, CO",
+        imageUrl = "",
+        rating = 4.8,
+        price = "$$",
+        xPct = 0.41f, yPct = 0.32f
+    ),
+    Restaurant(
+        restId = "3",
+        name = "Bonfire Burritos",
+        location = "Golden, CO",
+        imageUrl = "",
+        rating = 4.9,
+        price = "$",
+        xPct = 0.46f, yPct = 0.35f
+    ),
+    Restaurant(
+        restId = "4",
+        name = "The Golden Mill",
+        location = "Golden, CO",
+        imageUrl = "",
+        rating = 4.7,
+        price = "$$",
+        xPct = 0.40f, yPct = 0.34f
+    ),
+    Restaurant(
+        restId = "5",
+        name = "Bob's Atomic Burgers",
+        location = "Golden, CO",
+        imageUrl = "",
+        rating = 4.6,
+        price = "$",
+        xPct = 0.43f, yPct = 0.33f
+    )
 )

@@ -1,7 +1,10 @@
-//com/csci448/khoa_nguyen/hungry/ui/screens/MapScreen.kt
 package com.csci448.khoa_nguyen.hungry.ui.screens
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateOffsetAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -10,77 +13,115 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.csci448.khoa_nguyen.hungry.R
 import com.csci448.khoa_nguyen.hungry.data.models.Restaurant
 import com.csci448.khoa_nguyen.hungry.data.models.dummyRestaurants
+import com.csci448.khoa_nguyen.hungry.ui.components.SmallRestaurantCard
 
 @Composable
 fun MapScreen() {
+    // 1. State for Zoom and Panning
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
 
-    Box(
+    // Smooth animations for when we click a restaurant
+    val animatedScale by animateFloatAsState(targetValue = scale, label = "zoom")
+    val animatedOffset by animateOffsetAsState(targetValue = offset, label = "pan")
+
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFE8EAE6))
+            .clip(RectangleShape)
+            // 2. Add Pinch-to-Zoom and Dragging logic
+            .pointerInput(Unit) {
+                detectTransformGestures { _, pan, zoom, _ ->
+                    scale = (scale * zoom).coerceIn(1f, 5f)
+                    offset += pan
+                }
+            }
     ) {
-        // Fake watermark just so the team knows it's a placeholder
-        Text(
-            text = "Fake Map: Golden, CO",
-            style = MaterialTheme.typography.headlineLarge,
-            color = Color.LightGray,
+        val width = constraints.maxWidth.toFloat()
+        val height = constraints.maxHeight.toFloat()
+
+        // 3. The Actual Map Image (Replace R.drawable.golden_map with your actual resource name)
+        Image(
+            painter = painterResource(id = R.drawable.golden_map),
+            contentDescription = "Golden Map Background",
+            contentScale = ContentScale.FillBounds,
             modifier = Modifier
-                .align(Alignment.Center)
-                .offset(y = (-100).dp)
+                .fillMaxSize()
+                .graphicsLayer(
+                    scaleX = animatedScale,
+                    scaleY = animatedScale,
+                    translationX = animatedOffset.x,
+                    translationY = animatedOffset.y
+                )
         )
 
-
-        dummyRestaurants.forEachIndexed { index, restaurant ->
-            // Hardcoding some random offsets so they don't stack on top of each other
-            val offsetX = (index * 80 - 60).dp
-            val offsetY = (index * -100 + 150).dp
+        // 4. Floating Pins
+        dummyRestaurants.forEach { restaurant ->
+            // Use the percentages from your data model
+            val xPos = restaurant.xPct * width
+            val yPos = restaurant.yPct * height
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .align(Alignment.Center)
-                    .offset(x = offsetX, y = offsetY)
+                    .offset {
+                        IntOffset(
+                            x = (xPos * animatedScale + animatedOffset.x).toInt() - 50, // Center the pin
+                            y = (yPos * animatedScale + animatedOffset.y).toInt() - 100 // Offset so point touches spot
+                        )
+                    }
             ) {
                 Surface(
                     shape = CircleShape,
                     color = Color.White,
-                    shadowElevation = 4.dp
+                    shadowElevation = 4.dp,
+                    onClick = {
+                        // 5. CLICK LOGIC: Zoom in and center on the pin
+                        scale = 3.5f
+                        offset = Offset(
+                            x = (width / 2f) - (xPos * scale),
+                            y = (height / 2f) - (yPos * scale)
+                        )
+                    }
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = restaurant.name,
                         tint = Color(0xFFD32F2F),
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .size(32.dp)
+                        modifier = Modifier.padding(8.dp).size(32.dp)
                     )
                 }
-                Spacer(modifier = Modifier.height(4.dp))
-                // Little label under the pin
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = Color.White.copy(alpha = 0.9f),
-                    modifier = Modifier.padding(2.dp)
-                ) {
-                    Text(
-                        text = restaurant.name,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                }
+                // Label that stays with the pin
+                Text(
+                    text = restaurant.name,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .background(Color.White.copy(alpha = 0.8f), RoundedCornerShape(4.dp))
+                        .padding(horizontal = 4.dp)
+                )
             }
         }
 
-        // The horizontal scroll at the bottom
+        // 6. Keep your bottom list for navigation
         LazyRow(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -93,47 +134,13 @@ fun MapScreen() {
                 SmallRestaurantCard(restaurant)
             }
         }
-    }
-}
 
-// A smaller version of your card just for the map view
-@Composable
-fun SmallRestaurantCard(restaurant: Restaurant) {
-    Card(
-        modifier = Modifier
-            .width(220.dp)
-            .height(140.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Fake image block
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .background(Color.LightGray)
-            )
-            // Bottom red banner
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFD32F2F))
-                    .padding(12.dp)
-            ) {
-                Text(
-                    text = restaurant.name,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1
-                )
-                Text(
-                    text = "${restaurant.rating} Stars • ${restaurant.price}",
-                    color = Color.White,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+        // Reset Button to go back to full view
+        IconButton(
+            onClick = { scale = 1f; offset = Offset.Zero },
+            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp).background(Color.White, CircleShape)
+        ) {
+            Icon(Icons.Default.LocationOn, contentDescription = "Reset", tint = Color.Gray)
         }
     }
 }
