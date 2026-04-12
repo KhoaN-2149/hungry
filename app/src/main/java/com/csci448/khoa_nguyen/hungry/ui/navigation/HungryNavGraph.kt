@@ -1,6 +1,7 @@
 package com.csci448.khoa_nguyen.hungry.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -9,12 +10,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.csci448.khoa_nguyen.hungry.ui.screens.*
+import com.csci448.khoa_nguyen.hungry.ui.viewmodels.AuthViewModel
+import com.csci448.khoa_nguyen.hungry.ui.viewmodels.AuthState
 import com.csci448.khoa_nguyen.hungry.ui.viewmodels.HungryViewModel
 
 @Composable
 fun HungryNavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
-    // Create the ViewModel and keep it alive as long as the NavGraph is alive
-    val viewModel: HungryViewModel = viewModel()
+    val hungryViewModel: HungryViewModel = viewModel()
+    val authViewModel: AuthViewModel = viewModel() // Added our new ViewModel
 
     NavHost(
         navController = navController,
@@ -22,46 +25,58 @@ fun HungryNavGraph(navController: NavHostController, modifier: Modifier = Modifi
         modifier = modifier
     ) {
         composable(Screen.Login.route) {
+            val authState by authViewModel.authState.collectAsState()
+
+            // If the user logs in successfully, immediately navigate them to the main app
+            LaunchedEffect(authState) {
+                if (authState is AuthState.Authenticated) {
+                    navController.navigate(Screen.Hungry.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                }
+            }
+
             LoginScreen(
-                onLoginClick = {
+                authState = authState,
+                onLoginClick = { email, pass -> authViewModel.login(email, pass) },
+                onSignUpClick = { email, pass -> authViewModel.signUp(email, pass) },
+                onGuestClick = {
                     navController.navigate(Screen.Hungry.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 }
             )
         }
-        composable(Screen.Hungry.route) {
-            // Collect the restaurant list
-            val restaurants by viewModel.currentRestaurants.collectAsState()
 
+        composable(Screen.Hungry.route) {
+            val restaurants by hungryViewModel.currentRestaurants.collectAsState()
             SwipeScreen(
                 currentRestaurants = restaurants,
-                onSwipeLeft = { viewModel.swipeLeft() },
-                onSwipeRight = { viewModel.swipeRight(it) }
+                onSwipeLeft = { hungryViewModel.swipeLeft() },
+                onSwipeRight = { hungryViewModel.swipeRight(it) }
             )
         }
-        composable(Screen.Favorite.route) {
-            // Collect the user's favorites list
-            val favorites by viewModel.favorites.collectAsState()
 
+        composable(Screen.Favorite.route) {
+            val favorites by hungryViewModel.favorites.collectAsState()
             FavoritesScreen(favorites = favorites)
         }
+
         composable(Screen.Map.route) { MapScreen() }
         composable(Screen.Friend.route) { FriendsScreen() }
-        composable(Screen.Profile.route) {
 
-            // Collect the profile state
-            val isVeg by viewModel.isVegetarian.collectAsState()
-            val isSpicy by viewModel.isSpicyOnly.collectAsState()
-            val isGF by viewModel.isGlutenFree.collectAsState()
+        composable(Screen.Profile.route) {
+            val isVeg by hungryViewModel.isVegetarian.collectAsState()
+            val isSpicy by hungryViewModel.isSpicyOnly.collectAsState()
+            val isGF by hungryViewModel.isGlutenFree.collectAsState()
 
             ProfileScreen(
                 isVegetarian = isVeg,
                 isSpicyOnly = isSpicy,
                 isGlutenFree = isGF,
-                onVegetarianChanged = { viewModel.updateVegetarian(it) },
-                onSpicyOnlyChanged = { viewModel.updateSpicyOnly(it) },
-                onGlutenFreeChanged = { viewModel.updateGlutenFree(it) }
+                onVegetarianChanged = { hungryViewModel.updateVegetarian(it) },
+                onSpicyOnlyChanged = { hungryViewModel.updateSpicyOnly(it) },
+                onGlutenFreeChanged = { hungryViewModel.updateGlutenFree(it) }
             )
         }
     }

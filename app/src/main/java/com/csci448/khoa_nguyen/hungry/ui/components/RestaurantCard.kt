@@ -24,8 +24,7 @@ fun RestaurantCard(restaurant: Restaurant, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.85f)
-            .padding(16.dp),
+            .fillMaxHeight(0.85f),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
