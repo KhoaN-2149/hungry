@@ -69,14 +69,28 @@ fun HungryNavGraph(navController: NavHostController, modifier: Modifier = Modifi
             val isVeg by hungryViewModel.isVegetarian.collectAsState()
             val isSpicy by hungryViewModel.isSpicyOnly.collectAsState()
             val isGF by hungryViewModel.isGlutenFree.collectAsState()
-
+            val authState by authViewModel.authState.collectAsState()
+            val displayName = if (authState is AuthState.Guest) {
+                "Guest"
+            } else {
+                authViewModel.currentUserEmail ?: "User"
+            }
             ProfileScreen(
+                username = displayName,
                 isVegetarian = isVeg,
                 isSpicyOnly = isSpicy,
                 isGlutenFree = isGF,
                 onVegetarianChanged = { hungryViewModel.updateVegetarian(it) },
                 onSpicyOnlyChanged = { hungryViewModel.updateSpicyOnly(it) },
-                onGlutenFreeChanged = { hungryViewModel.updateGlutenFree(it) }
+                onGlutenFreeChanged = { hungryViewModel.updateGlutenFree(it) },
+                onLogout = {
+                    // 3. Call the logout function you already have!
+                    authViewModel.logout()
+
+                    // 4. Send them back to Login and clear the history
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }}
             )
         }
     }

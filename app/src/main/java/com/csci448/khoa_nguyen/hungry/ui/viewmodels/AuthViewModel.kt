@@ -11,11 +11,14 @@ sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
     object Authenticated : AuthState()
+    object Guest : AuthState()
     data class Error(val message: String) : AuthState()
 }
 
 class AuthViewModel : ViewModel() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    val currentUserEmail: String?
+        get() = auth.currentUser?.email
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()

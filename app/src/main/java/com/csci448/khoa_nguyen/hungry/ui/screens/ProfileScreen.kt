@@ -19,12 +19,14 @@ import com.csci448.khoa_nguyen.hungry.ui.theme.HungryTheme
 
 @Composable
 fun ProfileScreen(
+    username: String,               // Add this
     isVegetarian: Boolean,
     isSpicyOnly: Boolean,
     isGlutenFree: Boolean,
     onVegetarianChanged: (Boolean) -> Unit,
     onSpicyOnlyChanged: (Boolean) -> Unit,
-    onGlutenFreeChanged: (Boolean) -> Unit
+    onGlutenFreeChanged: (Boolean) -> Unit,
+    onLogout: () -> Unit            // Add this
 ) {
     Column(
         modifier = Modifier
@@ -55,7 +57,7 @@ fun ProfileScreen(
 
         // Username & Stuff
         Text(
-            text = "HungryFatHippo67",
+            text = username,
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
@@ -114,6 +116,17 @@ fun ProfileScreen(
                     isChecked = isGlutenFree,
                     onCheckedChange = onGlutenFreeChanged
                 )
+                Spacer(modifier = Modifier.weight(1f))
+
+                Button(
+                    onClick = onLogout,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Log Out")
+                }
             }
         }
     }
@@ -147,12 +160,14 @@ fun PreferenceToggle(
 fun ProfileScreenPreview() {
     HungryTheme {
         ProfileScreen(
+            username = "Guest",
             isVegetarian = false,
             isSpicyOnly = true,
             isGlutenFree = false,
             onVegetarianChanged = {},
             onSpicyOnlyChanged = {},
-            onGlutenFreeChanged = {}
+            onGlutenFreeChanged = {},
+            onLogout = {} // Added empty lambda
         )
     }
 }
