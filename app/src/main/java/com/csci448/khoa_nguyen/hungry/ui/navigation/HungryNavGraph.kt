@@ -17,7 +17,7 @@ import com.csci448.khoa_nguyen.hungry.ui.viewmodels.HungryViewModel
 @Composable
 fun HungryNavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
     val hungryViewModel: HungryViewModel = viewModel()
-    val authViewModel: AuthViewModel = viewModel() // Added our new ViewModel
+    val authViewModel: AuthViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -63,18 +63,29 @@ fun HungryNavGraph(navController: NavHostController, modifier: Modifier = Modifi
         }
 
         composable(Screen.Map.route) { MapScreen() }
-        composable(Screen.Friend.route) { FriendsScreen() }
+
+        composable(Screen.Friend.route) {
+            // Collect the list of users from the database
+            val usersList by hungryViewModel.allUsers.collectAsState()
+
+            FriendsScreen(
+                usersList = usersList,
+                onAddFriendClick = { targetUser ->
+                    // This triggers the Firestore save we just built!
+                    hungryViewModel.sendFriendRequest(targetUser)
+                }
+            )
+        }
 
         composable(Screen.Profile.route) {
             val isVeg by hungryViewModel.isVegetarian.collectAsState()
             val isSpicy by hungryViewModel.isSpicyOnly.collectAsState()
             val isGF by hungryViewModel.isGlutenFree.collectAsState()
-            val authState by authViewModel.authState.collectAsState()
-            val displayName = if (authState is AuthState.Guest) {
-                "Guest"
-            } else {
-                authViewModel.currentUserEmail ?: "User"
-            }
+
+            // Try to get the email. If it exists, use the part before the '@'. Otherwise, use "Guest".
+            val email = authViewModel.currentUserEmail
+            val displayName = if (email != null) email.substringBefore("@") else "Guest"
+
             ProfileScreen(
                 username = displayName,
                 isVegetarian = isVeg,
@@ -84,13 +95,11 @@ fun HungryNavGraph(navController: NavHostController, modifier: Modifier = Modifi
                 onSpicyOnlyChanged = { hungryViewModel.updateSpicyOnly(it) },
                 onGlutenFreeChanged = { hungryViewModel.updateGlutenFree(it) },
                 onLogout = {
-                    // 3. Call the logout function you already have!
                     authViewModel.logout()
-
-                    // 4. Send them back to Login and clear the history
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
-                    }}
+                    }
+                }
             )
         }
     }

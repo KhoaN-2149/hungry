@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateOffsetAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -27,18 +28,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.csci448.khoa_nguyen.hungry.R
 import com.csci448.khoa_nguyen.hungry.data.models.Restaurant
 import com.csci448.khoa_nguyen.hungry.data.models.dummyRestaurants
-import com.csci448.khoa_nguyen.hungry.ui.components.SmallRestaurantCard
 
 @Composable
 fun MapScreen() {
-    // 1. State for Zoom and Panning
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
 
-    // Smooth animations for when we click a restaurant
     val animatedScale by animateFloatAsState(targetValue = scale, label = "zoom")
     val animatedOffset by animateOffsetAsState(targetValue = offset, label = "pan")
 
@@ -47,7 +46,6 @@ fun MapScreen() {
             .fillMaxSize()
             .background(Color(0xFFE8EAE6))
             .clip(RectangleShape)
-            // 2. Add Pinch-to-Zoom and Dragging logic
             .pointerInput(Unit) {
                 detectTransformGestures { _, pan, zoom, _ ->
                     scale = (scale * zoom).coerceIn(1f, 5f)
@@ -58,7 +56,8 @@ fun MapScreen() {
         val width = constraints.maxWidth.toFloat()
         val height = constraints.maxHeight.toFloat()
 
-        // 3. The Actual Map Image (Replace R.drawable.golden_map with your actual resource name)
+        // Make sure you have an image named "golden_map" in your res/drawable folder!
+        // If you don't have one yet, you can comment this Image block out temporarily.
         Image(
             painter = painterResource(id = R.drawable.golden_map),
             contentDescription = "Golden Map Background",
@@ -73,9 +72,7 @@ fun MapScreen() {
                 )
         )
 
-        // 4. Floating Pins
         dummyRestaurants.forEach { restaurant ->
-            // Use the percentages from your data model
             val xPos = restaurant.xPct * width
             val yPos = restaurant.yPct * height
 
@@ -84,8 +81,8 @@ fun MapScreen() {
                 modifier = Modifier
                     .offset {
                         IntOffset(
-                            x = (xPos * animatedScale + animatedOffset.x).toInt() - 50, // Center the pin
-                            y = (yPos * animatedScale + animatedOffset.y).toInt() - 100 // Offset so point touches spot
+                            x = (xPos * animatedScale + animatedOffset.x).toInt() - 50,
+                            y = (yPos * animatedScale + animatedOffset.y).toInt() - 100
                         )
                     }
             ) {
@@ -93,8 +90,7 @@ fun MapScreen() {
                     shape = CircleShape,
                     color = Color.White,
                     shadowElevation = 4.dp,
-                    onClick = {
-                        // 5. CLICK LOGIC: Zoom in and center on the pin
+                    modifier = Modifier.clickable {
                         scale = 3.5f
                         offset = Offset(
                             x = (width / 2f) - (xPos * scale),
@@ -106,10 +102,11 @@ fun MapScreen() {
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = restaurant.name,
                         tint = Color(0xFFD32F2F),
-                        modifier = Modifier.padding(8.dp).size(32.dp)
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .size(32.dp)
                     )
                 }
-                // Label that stays with the pin
                 Text(
                     text = restaurant.name,
                     style = MaterialTheme.typography.labelSmall,
@@ -121,7 +118,6 @@ fun MapScreen() {
             }
         }
 
-        // 6. Keep your bottom list for navigation
         LazyRow(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -135,12 +131,57 @@ fun MapScreen() {
             }
         }
 
-        // Reset Button to go back to full view
         IconButton(
             onClick = { scale = 1f; offset = Offset.Zero },
-            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp).background(Color.White, CircleShape)
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+                .background(Color.White, CircleShape)
         ) {
             Icon(Icons.Default.LocationOn, contentDescription = "Reset", tint = Color.Gray)
+        }
+    }
+}
+
+// Brought this back and upgraded it to use Coil AsyncImage!
+@Composable
+fun SmallRestaurantCard(restaurant: Restaurant) {
+    Card(
+        modifier = Modifier
+            .width(220.dp)
+            .height(140.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            AsyncImage(
+                model = restaurant.imageUrl,
+                contentDescription = "${restaurant.name} image",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .background(Color.LightGray)
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFD32F2F))
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = restaurant.name,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
+                )
+                Text(
+                    text = "${restaurant.rating} Stars • ${restaurant.price}",
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
     }
 }

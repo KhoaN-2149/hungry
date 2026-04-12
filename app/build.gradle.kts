@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
+    implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -68,4 +69,5 @@ dependencies {
     implementation(libs.compose.navigation)
     implementation(libs.compose.icons.extended)
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
 }

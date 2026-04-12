@@ -11,32 +11,22 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.csci448.khoa_nguyen.hungry.R
-import com.csci448.khoa_nguyen.hungry.ui.theme.HungryTheme
-
-data class Friend(
-    val name: String,
-    val status: String
-)
+import com.csci448.khoa_nguyen.hungry.data.models.User
 
 @Composable
-fun FriendsScreen() {
-
-    val friends = listOf(
-        Friend("A", "A bio"),
-        Friend("B", "B bio"),
-        Friend("C", "C bio"),
-        Friend("D", "D bio"),
-        Friend("E", "E bio")
-    )
-
+fun FriendsScreen(
+    usersList: List<User>,
+    onAddFriendClick: (User) -> Unit // NEW: Pass the click event up to the NavGraph!
+) {
     var searchText by remember { mutableStateOf("") }
 
-    val filteredFriends = friends.filter {
-        it.name.contains(searchText, ignoreCase = true)
+    // NEW: Keep track of who we just sent a request to so we can update the button UI
+    val sentRequests = remember { mutableStateListOf<String>() }
+
+    val filteredUsers = usersList.filter {
+        it.displayName.contains(searchText, ignoreCase = true) ||
+                it.email.contains(searchText, ignoreCase = true)
     }
 
     Column(
@@ -45,11 +35,10 @@ fun FriendsScreen() {
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
-        // Search Bar
         OutlinedTextField(
             value = searchText,
             onValueChange = { searchText = it },
-            label = { Text(stringResource(R.string.search_friends)) },
+            label = { Text("Search for friends...") },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                 focusedLabelColor = MaterialTheme.colorScheme.primary,
@@ -59,72 +48,81 @@ fun FriendsScreen() {
                 .fillMaxWidth()
                 .padding(bottom = 12.dp)
         )
-        LazyColumn {
-            items(filteredFriends) { friend ->
-                Card(
-                    colors = CardDefaults.cardColors(
-                        // Uses the light pink-red variant we set up in Theme.kt
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp)
-                ) {
-                    Row(
+
+        if (usersList.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("No other users found yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        } else {
+            LazyColumn {
+                items(filteredUsers) { user ->
+
+                    // Check if we already sent a request to this specific user during this session
+                    val isSent = sentRequests.contains(user.uid)
+
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(vertical = 6.dp)
                     ) {
-                        // Avatar placeholder
-                        Box(
+                        Row(
                             modifier = Modifier
-                                .size(48.dp)
-                                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Avatar Placeholder",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                text = friend.name,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Text(
-                                text = friend.status,
-                                // Slightly fade the text for the status bio
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                        Button(
-                            onClick = { /* invite later */ },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            )
-                        ) {
-                            Text(stringResource(R.string.invite))
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = "Avatar Placeholder",
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = user.displayName,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Text(
+                                    text = user.bio,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                            Button(
+                                onClick = {
+                                    if (!isSent) {
+                                        onAddFriendClick(user) // Send to database!
+                                        sentRequests.add(user.uid) // Update local UI state
+                                    }
+                                },
+                                enabled = !isSent, // Disable button if already sent
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                                    disabledContainerColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.12f),
+                                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                                )
+                            ) {
+                                // Change text from "Add" to "Sent"
+                                Text(if (isSent) "Sent" else "Add")
+                            }
                         }
                     }
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun FriendsScreenPreview() {
-    HungryTheme {
-        FriendsScreen()
     }
 }
