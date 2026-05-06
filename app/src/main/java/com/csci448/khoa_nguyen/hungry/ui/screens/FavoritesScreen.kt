@@ -9,12 +9,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage // Ensure this is imported
 import com.csci448.khoa_nguyen.hungry.data.models.Restaurant
 import com.csci448.khoa_nguyen.hungry.data.models.dummyRestaurants
 
@@ -23,11 +26,10 @@ private val TextPrimary = Color(0xFF1A1A1A)
 private val TextSecondary = Color(0xFF757575)
 private val StarYellow = Color(0xFFFFC107)
 private val PlaceholderGray = Color(0xFFCCCCCC)
-private val PlaceholderIconGray = Color(0xFF9E9E9E)
 
 @Composable
 fun FavoritesScreen(
-    favorites: List<Restaurant> = emptyList() // Now uses the real Restaurant model
+    favorites: List<Restaurant> = emptyList()
 ) {
     Column(
         modifier = Modifier
@@ -140,15 +142,17 @@ private fun FavoriteCard(restaurant: Restaurant) {
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column {
-            Box(
+            // FIXED: Replaced the Box with AsyncImage
+            AsyncImage(
+                model = restaurant.imageUrl,
+                contentDescription = "${restaurant.name} image",
+                contentScale = ContentScale.Crop, // Crop ensures the food fills the frame
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp)
-                    .background(PlaceholderGray),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "🏔", fontSize = 40.sp, color = PlaceholderIconGray)
-            }
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                    .background(PlaceholderGray)
+            )
 
             Box(
                 modifier = Modifier
@@ -200,6 +204,5 @@ fun FavoritesScreenEmptyPreview() {
 @Preview(showBackground = true, name = "With Favorites", showSystemUi = true)
 @Composable
 fun FavoritesScreenWithDataPreview() {
-    // Just pulling the first two from your dummy list to test the preview
     FavoritesScreen(favorites = dummyRestaurants.take(2))
 }
