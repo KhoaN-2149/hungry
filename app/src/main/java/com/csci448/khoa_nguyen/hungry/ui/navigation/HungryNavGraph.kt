@@ -14,6 +14,8 @@ import com.csci448.khoa_nguyen.hungry.ui.viewmodels.AuthViewModel
 import com.csci448.khoa_nguyen.hungry.ui.viewmodels.AuthState
 import com.csci448.khoa_nguyen.hungry.ui.viewmodels.HungryViewModel
 import com.csci448.khoa_nguyen.hungry.ui.screens.FriendDetailScreen
+
+// This sets up all the different screens and how to move between them
 @Composable
 fun HungryNavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
     val hungryViewModel: HungryViewModel = viewModel()
@@ -24,9 +26,11 @@ fun HungryNavGraph(navController: NavHostController, modifier: Modifier = Modifi
         startDestination = Screen.Login.route,
         modifier = modifier
     ) {
+        // The first screen where users sign in
         composable(Screen.Login.route) {
             val authState by authViewModel.authState.collectAsState()
 
+            // If the user is already logged in, skip the login screen
             LaunchedEffect(authState) {
                 if (authState is AuthState.Authenticated) {
                     navController.navigate(Screen.Hungry.route) {
@@ -47,6 +51,7 @@ fun HungryNavGraph(navController: NavHostController, modifier: Modifier = Modifi
             )
         }
 
+        // The main swiping screen for finding food
         composable(Screen.Hungry.route) {
             val restaurants by hungryViewModel.currentRestaurants.collectAsState()
             SwipeScreen(
@@ -56,23 +61,24 @@ fun HungryNavGraph(navController: NavHostController, modifier: Modifier = Modifi
             )
         }
 
+        // A list of all the places the user has liked
         composable(Screen.Favorite.route) {
             val favorites by hungryViewModel.favorites.collectAsState()
             FavoritesScreen(favorites = favorites)
         }
 
+        // The map view for seeing restaurant locations
         composable(Screen.Map.route) { MapScreen() }
 
+        // Handles searching for people and managing friend requests
         composable(Screen.Friend.route) {
             val usersList by hungryViewModel.allUsers.collectAsState()
             val pendingRequests by hungryViewModel.pendingRequests.collectAsState()
-
-            // FIX: Collect the friends list state
             val myFriends by hungryViewModel.myFriends.collectAsState()
 
             FriendsScreen(
                 usersList = usersList,
-                myFriends = myFriends, // Pass friends list
+                myFriends = myFriends,
                 pendingRequests = pendingRequests,
                 onAddFriendClick = { targetUser ->
                     hungryViewModel.sendFriendRequest(targetUser)
@@ -84,15 +90,13 @@ fun HungryNavGraph(navController: NavHostController, modifier: Modifier = Modifi
                     hungryViewModel.denyFriendRequest(requestUid)
                 },
                 onFriendClick = { friend ->
-                    // FIX: Load their data and navigate
                     hungryViewModel.loadFriendData(friend.uid)
-                    // Note: You'll need to define this route in Screen.kt if you want a separate page
-                    // For now, we can navigate to a detail screen or show a dialog
                     navController.navigate("friend_detail")
                 }
             )
         }
 
+        // User settings, dietary preferences, and the logout button
         composable(Screen.Profile.route) {
             val isVeg by hungryViewModel.isVegetarian.collectAsState()
             val isSpicy by hungryViewModel.isSpicyOnly.collectAsState()
@@ -100,7 +104,6 @@ fun HungryNavGraph(navController: NavHostController, modifier: Modifier = Modifi
             val currentBio by hungryViewModel.userBio.collectAsState()
 
             val email = authViewModel.currentUserEmail
-            // FIX: Simplified using the Elvis operator (resolves line 96 warning)
             val displayName = email?.substringBefore("@") ?: "Guest"
 
             ProfileScreen(
@@ -124,12 +127,11 @@ fun HungryNavGraph(navController: NavHostController, modifier: Modifier = Modifi
             )
         }
 
-        // OPTIONAL: Add the detail route if you want a full screen for friend favorites
+        // Shows specific favorites and shared matches with a friend
         composable("friend_detail") {
             val friendFaves by hungryViewModel.friendFavorites.collectAsState()
             val mutualFaves by hungryViewModel.mutualFavorites.collectAsState()
 
-            // You can build a quick FriendDetailScreen to show these lists
             FriendDetailScreen(
                 friendFavorites = friendFaves,
                 mutualFavorites = mutualFaves,

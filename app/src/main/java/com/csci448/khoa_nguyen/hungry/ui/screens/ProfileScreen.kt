@@ -17,17 +17,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.csci448.khoa_nguyen.hungry.ui.theme.HungryTheme
 
+// This is the main profile page where users can manage their info and food preferences
 @Composable
 fun ProfileScreen(
     username: String,
-    currentBio: String,             // Added
+    currentBio: String,
     isVegetarian: Boolean,
     isSpicyOnly: Boolean,
     isGlutenFree: Boolean,
     onVegetarianChanged: (Boolean) -> Unit,
     onSpicyOnlyChanged: (Boolean) -> Unit,
     onGlutenFreeChanged: (Boolean) -> Unit,
-    onUpdateBio: (String) -> Unit,  // Added
+    onUpdateBio: (String) -> Unit,
     onLogout: () -> Unit
 ) {
     var showBioDialog by remember { mutableStateOf(false) }
@@ -42,7 +43,7 @@ fun ProfileScreen(
     ) {
         Spacer(modifier = Modifier.height(48.dp))
 
-        // Avatar Image
+        // The circle at the top showing the user's initials
         Box(
             modifier = Modifier
                 .size(120.dp)
@@ -60,7 +61,6 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Username
         Text(
             text = username,
             fontSize = 28.sp,
@@ -68,7 +68,7 @@ fun ProfileScreen(
             color = MaterialTheme.colorScheme.onBackground
         )
 
-        // Editable Bio
+        // A simple row that shows the bio and a button to change it
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = currentBio,
@@ -90,7 +90,7 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(48.dp))
 
-        // Dietary Preferences
+        // This card holds all the toggle switches for dietary needs
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -150,6 +150,7 @@ fun ProfileScreen(
         }
     }
 
+    // A quick popup to let the user type in a new bio
     if (showBioDialog) {
         AlertDialog(
             onDismissRequest = { showBioDialog = false },
@@ -175,6 +176,7 @@ fun ProfileScreen(
     }
 }
 
+// A reusable row with a text label and a switch
 @Composable
 fun PreferenceToggle(
     label: String,

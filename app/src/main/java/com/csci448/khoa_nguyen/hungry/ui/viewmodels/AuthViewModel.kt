@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+// These are the possible states for the login process
 sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
@@ -15,6 +16,7 @@ sealed class AuthState {
     data class Error(val message: String) : AuthState()
 }
 
+// This manages everything related to signing in, signing up, and keeping track of the user
 class AuthViewModel : ViewModel() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
@@ -22,16 +24,18 @@ class AuthViewModel : ViewModel() {
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
-    // Expose the current user's email (returns null if they are a guest)
+    // A quick way to grab the logged-in user's email
     val currentUserEmail: String?
         get() = auth.currentUser?.email
 
     init {
+        // If the app opens and someone is already signed in, skip the login screen
         if (auth.currentUser != null) {
             _authState.value = AuthState.Authenticated
         }
     }
 
+    // Handles creating a new account and saving that user's info to our database
     fun signUp(email: String, pass: String) {
         if (email.isBlank() || pass.isBlank()) {
             _authState.value = AuthState.Error("Email and Password cannot be empty.")
@@ -43,8 +47,6 @@ class AuthViewModel : ViewModel() {
                 if (task.isSuccessful) {
                     val firebaseUser = auth.currentUser
                     if (firebaseUser != null) {
-                        // Save the user to the Firestore Database
-                        // We use the first part of their email as a default display name
                         val defaultName = email.substringBefore("@")
                         val newUser = User(
                             uid = firebaseUser.uid,
@@ -67,6 +69,7 @@ class AuthViewModel : ViewModel() {
             }
     }
 
+    // Tries to log someone in with an existing account
     fun login(email: String, pass: String) {
         if (email.isBlank() || pass.isBlank()) {
             _authState.value = AuthState.Error("Email and Password cannot be empty.")
@@ -83,6 +86,7 @@ class AuthViewModel : ViewModel() {
             }
     }
 
+    // Signs the user out and resets the state to idle
     fun logout() {
         auth.signOut()
         _authState.value = AuthState.Idle

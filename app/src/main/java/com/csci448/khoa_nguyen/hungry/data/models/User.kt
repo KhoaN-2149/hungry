@@ -1,5 +1,3 @@
-//// com/csci448/khoa_nguyen/hungry/data/models/User.kt
-
 package com.csci448.khoa_nguyen.hungry.data.models
 
 data class User(

@@ -30,18 +30,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage // Ensure this import is here
+import coil.compose.AsyncImage
 import com.csci448.khoa_nguyen.hungry.R
 import com.csci448.khoa_nguyen.hungry.data.models.Restaurant
 import com.csci448.khoa_nguyen.hungry.data.models.dummyRestaurants
 import com.csci448.khoa_nguyen.hungry.ui.components.SmallRestaurantCard
 
+// This screen shows the map where users can pan, zoom, and tap on restaurant pins
 @Composable
 fun MapScreen() {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
 
-    // State to track which pin was clicked
+    // Keep track of which restaurant is currently being looked at
     var selectedRestaurant by remember { mutableStateOf<Restaurant?>(null) }
 
     val animatedScale by animateFloatAsState(targetValue = scale, label = "zoom")
@@ -55,7 +56,7 @@ fun MapScreen() {
                 detectTransformGestures { _, pan, zoom, _ ->
                     scale = (scale * zoom).coerceIn(1f, 5f)
                     offset += pan
-                    // Dismiss overlay if user starts panning/zooming manually
+                    // Hide the popup if the user starts manually moving the map
                     if (pan != Offset.Zero || zoom != 1f) selectedRestaurant = null
                 }
             }
@@ -63,16 +64,17 @@ fun MapScreen() {
         val width = constraints.maxWidth.toFloat()
         val height = constraints.maxHeight.toFloat()
 
+        // Automatically zoom and center the map on a specific restaurant
         val focusOnRestaurant: (Restaurant) -> Unit = { rest ->
             scale = 4f
             offset = Offset(
                 x = (width / 2f) - (rest.xPct * width * scale),
                 y = (height / 2f) - (rest.yPct * height * scale)
             )
-            selectedRestaurant = rest // Trigger the popup card
+            selectedRestaurant = rest
         }
 
-        // The Background Map Image
+        // The background map image
         Image(
             painter = painterResource(id = R.drawable.golden_map),
             contentDescription = "Golden CO Map",
@@ -87,7 +89,7 @@ fun MapScreen() {
                 )
         )
 
-        // Draw Pins with Names
+        // Loop through and drop a pin for each restaurant in the data
         dummyRestaurants.forEach { restaurant ->
             val xPos = restaurant.xPct * width
             val yPos = restaurant.yPct * height
@@ -115,6 +117,7 @@ fun MapScreen() {
                     )
                 }
 
+                // Show labels only when the user has zoomed in a bit
                 if (animatedScale > 1.5f) {
                     Surface(
                         shape = RoundedCornerShape(4.dp),
@@ -135,7 +138,7 @@ fun MapScreen() {
             }
         }
 
-        // Bottom Carousel for Quick Access
+        // The sliding carousel at the bottom to quickly jump between spots
         LazyRow(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -154,7 +157,7 @@ fun MapScreen() {
             }
         }
 
-        // --- FIXED: Detail Popup Overlay with Image Support ---
+        // A nice detail card that slides up when a pin is tapped
         AnimatedVisibility(
             visible = selectedRestaurant != null,
             enter = slideInVertically(initialOffsetY = { it }),
@@ -173,7 +176,6 @@ fun MapScreen() {
                     elevation = CardDefaults.cardElevation(12.dp)
                 ) {
                     Column {
-                        // Restaurant Image Section
                         AsyncImage(
                             model = rest.imageUrl,
                             contentDescription = "${rest.name} preview",
@@ -215,7 +217,7 @@ fun MapScreen() {
                             Spacer(modifier = Modifier.height(12.dp))
 
                             Button(
-                                onClick = { /* Logic for navigation to DetailScreen can go here */ },
+                                onClick = { /* Handle navigation to the full menu page */ },
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))

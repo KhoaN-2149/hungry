@@ -17,16 +17,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage // Ensure this is imported
+import coil.compose.AsyncImage
 import com.csci448.khoa_nguyen.hungry.data.models.Restaurant
 import com.csci448.khoa_nguyen.hungry.data.models.dummyRestaurants
 
+// Some basic colors to keep the theme consistent
 private val HungryRed = Color(0xFFD32F2F)
 private val TextPrimary = Color(0xFF1A1A1A)
 private val TextSecondary = Color(0xFF757575)
 private val StarYellow = Color(0xFFFFC107)
 private val PlaceholderGray = Color(0xFFCCCCCC)
 
+// The main container for the Favorites page
 @Composable
 fun FavoritesScreen(
     favorites: List<Restaurant> = emptyList()
@@ -38,6 +40,7 @@ fun FavoritesScreen(
     ) {
         FavoritesTopBar()
 
+        // Check if there's anything to show, otherwise show the "nothing here" screen
         if (favorites.isEmpty()) {
             EmptyFavoritesState()
         } else {
@@ -46,6 +49,7 @@ fun FavoritesScreen(
     }
 }
 
+// Just a simple header with the title and a red line
 @Composable
 private fun FavoritesTopBar() {
     Box(
@@ -65,6 +69,7 @@ private fun FavoritesTopBar() {
     HorizontalDivider(thickness = 2.dp, color = HungryRed.copy(alpha = 0.15f))
 }
 
+// What the user sees if they haven't liked any restaurants yet
 @Composable
 private fun EmptyFavoritesState() {
     Box(
@@ -111,6 +116,7 @@ private fun EmptyFavoritesState() {
     }
 }
 
+// The scrolling list that holds all the favorited restaurant cards
 @Composable
 private fun FavoritesList(favorites: List<Restaurant>) {
     Text(
@@ -133,6 +139,7 @@ private fun FavoritesList(favorites: List<Restaurant>) {
     }
 }
 
+// Individual card design for each favorited restaurant
 @Composable
 private fun FavoriteCard(restaurant: Restaurant) {
     Card(
@@ -142,11 +149,11 @@ private fun FavoriteCard(restaurant: Restaurant) {
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column {
-            // FIXED: Replaced the Box with AsyncImage
+            // Displays the restaurant photo at the top
             AsyncImage(
                 model = restaurant.imageUrl,
                 contentDescription = "${restaurant.name} image",
-                contentScale = ContentScale.Crop, // Crop ensures the food fills the frame
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp)
@@ -154,6 +161,7 @@ private fun FavoriteCard(restaurant: Restaurant) {
                     .background(PlaceholderGray)
             )
 
+            // The red info bar with the name, rating, and price level
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

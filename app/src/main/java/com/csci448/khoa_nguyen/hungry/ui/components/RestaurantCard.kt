@@ -17,20 +17,19 @@ import coil.compose.AsyncImage
 import com.csci448.khoa_nguyen.hungry.data.models.MenuItem
 import com.csci448.khoa_nguyen.hungry.data.models.Restaurant
 
+// This is the main card that displays the restaurant info and its photo
 @Composable
 fun RestaurantCard(restaurant: Restaurant, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .wrapContentHeight(), // Changed from fillMaxHeight to wrapContentHeight
+            .wrapContentHeight(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        // REMOVED: .verticalScroll(rememberScrollState())
-        // This prevents the "infinity maximum height constraints" crash
         Column {
-
+            // Pull the image from the URL and make it look nice and cropped
             AsyncImage(
                 model = restaurant.imageUrl,
                 contentDescription = "${restaurant.name} image",
@@ -41,11 +40,11 @@ fun RestaurantCard(restaurant: Restaurant, modifier: Modifier = Modifier) {
                     .background(Color.LightGray)
             )
 
-            // Header Info (Name, Rating, Price)
+            // The red banner section that holds the name, rating, and price level
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFD32F2F)) // HungryRed
+                    .background(Color(0xFFD32F2F))
                     .padding(16.dp)
             ) {
                 Text(
@@ -73,7 +72,7 @@ fun RestaurantCard(restaurant: Restaurant, modifier: Modifier = Modifier) {
                 }
             }
 
-            // The Menu Section
+            // Loop through the menu and show the top picks if there are any
             if (restaurant.menu.isNotEmpty()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
@@ -97,6 +96,7 @@ fun RestaurantCard(restaurant: Restaurant, modifier: Modifier = Modifier) {
     }
 }
 
+// A simple row to handle the layout for a single menu item
 @Composable
 fun MenuItemRow(item: MenuItem) {
     Row(

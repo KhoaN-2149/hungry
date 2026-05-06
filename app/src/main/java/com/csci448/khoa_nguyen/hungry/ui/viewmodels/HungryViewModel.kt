@@ -11,18 +11,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
+// Basic info for a friend request
 data class FriendRequest(
     val fromUid: String = "",
     val fromEmail: String = "",
     val status: String = ""
 )
 
+// This manages the app's data, like friends, favorites, and user settings
 class HungryViewModel : ViewModel() {
 
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
-    // --- Friends State ---
     private val _allUsers = MutableStateFlow<List<User>>(emptyList())
     val allUsers: StateFlow<List<User>> = _allUsers.asStateFlow()
 
@@ -38,7 +39,6 @@ class HungryViewModel : ViewModel() {
     private val _pendingRequests = MutableStateFlow<List<FriendRequest>>(emptyList())
     val pendingRequests: StateFlow<List<FriendRequest>> = _pendingRequests.asStateFlow()
 
-    // --- Profile State ---
     private val _userBio = MutableStateFlow("Foodie Level: Beginner")
     val userBio: StateFlow<String> = _userBio.asStateFlow()
 
@@ -51,7 +51,6 @@ class HungryViewModel : ViewModel() {
     private val _isGlutenFree = MutableStateFlow(false)
     val isGlutenFree: StateFlow<Boolean> = _isGlutenFree.asStateFlow()
 
-    // --- Favorites & Swipe State ---
     private val _favorites = MutableStateFlow<List<Restaurant>>(emptyList())
     val favorites: StateFlow<List<Restaurant>> = _favorites.asStateFlow()
 
@@ -61,6 +60,7 @@ class HungryViewModel : ViewModel() {
     init {
         fetchUsers()
 
+        // Automatically load or clear data when the user logs in or out
         auth.addAuthStateListener { firebaseAuth ->
             val user = firebaseAuth.currentUser
             if (user != null) {
@@ -77,6 +77,7 @@ class HungryViewModel : ViewModel() {
         }
     }
 
+    // Get a list of everyone else using the app
     private fun fetchUsers() {
         db.collection("users").addSnapshotListener { snapshot, error ->
             if (error != null) return@addSnapshotListener
@@ -89,17 +90,18 @@ class HungryViewModel : ViewModel() {
         }
     }
 
+    // Load the user's specific friends list
     private fun fetchMyFriends(uid: String) {
         db.collection("users").document(uid).collection("friends")
             .addSnapshotListener { snapshot, _ ->
                 if (snapshot != null) {
                     val friendIds = snapshot.documents.mapNotNull { it.getString("friendUid") }
-                    // Filter the allUsers list to find only those who are in our friends sub-collection
                     _myFriends.value = _allUsers.value.filter { it.uid in friendIds }
                 }
             }
     }
 
+    // Load the restaurants the user has swiped right on
     private fun fetchFavorites(uid: String) {
         db.collection("users").document(uid).collection("favorites")
             .addSnapshotListener { snapshot, error ->
@@ -113,6 +115,7 @@ class HungryViewModel : ViewModel() {
             }
     }
 
+    // Check for any new friend requests
     private fun fetchPendingRequests(uid: String) {
         db.collection("users").document(uid).collection("friend_requests")
             .whereEqualTo("status", "pending")
@@ -125,6 +128,7 @@ class HungryViewModel : ViewModel() {
             }
     }
 
+    // Get the user's bio description
     private fun fetchUserBio(uid: String) {
         db.collection("users").document(uid).addSnapshotListener { snapshot, error ->
             if (error == null && snapshot != null && snapshot.exists()) {
@@ -134,6 +138,7 @@ class HungryViewModel : ViewModel() {
         }
     }
 
+    // Get a friend's favorites and see which ones you both liked
     fun loadFriendData(friendUid: String) {
         db.collection("users").document(friendUid).collection("favorites")
             .get()
@@ -151,10 +156,12 @@ class HungryViewModel : ViewModel() {
         db.collection("users").document(uid).update("bio", newBio)
     }
 
+    // Update dietary preference toggles
     fun updateVegetarian(isVeg: Boolean) { _isVegetarian.value = isVeg }
     fun updateSpicyOnly(isSpicy: Boolean) { _isSpicyOnly.value = isSpicy }
     fun updateGlutenFree(isGluten: Boolean) { _isGlutenFree.value = isGluten }
 
+    // Save a restaurant to favorites when swiping right
     fun swipeRight(restaurant: Restaurant) {
         val uid = auth.currentUser?.uid
         if (uid != null) {
@@ -173,12 +180,14 @@ class HungryViewModel : ViewModel() {
         moveToNextRestaurant()
     }
 
+    // Remove the top card from the deck
     private fun moveToNextRestaurant() {
         _currentRestaurants.update { currentList ->
             if (currentList.isNotEmpty()) currentList.drop(1) else emptyList()
         }
     }
 
+    // Send a request to another user
     fun sendFriendRequest(targetUser: User) {
         val currentUser = auth.currentUser
         if (currentUser != null) {
@@ -193,22 +202,21 @@ class HungryViewModel : ViewModel() {
         }
     }
 
+    // Add someone as a friend and make sure they have you added too
     fun acceptFriendRequest(requestUid: String) {
         val uid = auth.currentUser?.uid ?: return
 
-        // 1. Mark request as accepted in your folder
         db.collection("users").document(uid).collection("friend_requests").document(requestUid)
             .update("status", "accepted")
 
-        // 2. Add to your friends list
         val friendDataForMe = hashMapOf("friendUid" to requestUid, "addedAt" to System.currentTimeMillis())
         db.collection("users").document(uid).collection("friends").document(requestUid).set(friendDataForMe)
 
-        // 3. Add you to their friends list (Mutual friendship)
         val friendDataForThem = hashMapOf("friendUid" to uid, "addedAt" to System.currentTimeMillis())
         db.collection("users").document(requestUid).collection("friends").document(uid).set(friendDataForThem)
     }
 
+    // Remove a pending request
     fun denyFriendRequest(requestUid: String) {
         val uid = auth.currentUser?.uid ?: return
         db.collection("users").document(uid).collection("friend_requests").document(requestUid).delete()

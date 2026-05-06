@@ -23,12 +23,14 @@ import com.csci448.khoa_nguyen.hungry.ui.components.RestaurantCard
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
+// The main screen for swiping through the restaurant stack
 @Composable
 fun SwipeScreen(
     currentRestaurants: List<Restaurant>,
     onSwipeLeft: () -> Unit,
     onSwipeRight: (Restaurant) -> Unit
 ) {
+    // Show a simple message if we've run out of restaurants to show
     if (currentRestaurants.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
@@ -41,19 +43,18 @@ fun SwipeScreen(
     }
 
     val topRestaurant = currentRestaurants.first()
-    // Grab the next restaurant to create a "stack" visual effect behind the top card
     val nextRestaurant = currentRestaurants.getOrNull(1)
 
-    // Calculate how far the user needs to drag to trigger a swipe (40% of screen width)
+    // Figure out how far the card needs to be pulled before it counts as a swipe
     val screenWidth = with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
     val swipeThreshold = screenWidth * 0.4f
 
-    // These hold the current X and Y position of the card being dragged
+    // Variables to track the card's movement
     val offsetX = remember { Animatable(0f) }
     val offsetY = remember { Animatable(0f) }
     val coroutineScope = rememberCoroutineScope()
 
-    // Whenever the top restaurant changes (i.e., we finished a swipe), instantly reset the card back to center
+    // Put the card back in the center every time the top restaurant changes
     LaunchedEffect(topRestaurant) {
         offsetX.snapTo(0f)
         offsetY.snapTo(0f)
@@ -67,24 +68,22 @@ fun SwipeScreen(
             modifier = Modifier.weight(1f).padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
-            // Draw the next card BEHIND the top card, scaled down slightly
+            // Show a preview of the next card behind the main one
             if (nextRestaurant != null) {
                 Box(modifier = Modifier.graphicsLayer {
                     scaleX = 0.9f
                     scaleY = 0.9f
                     alpha = 0.6f
                 }) {
-                    // Make sure we pass the modifier so the padding doesn't double up
                     RestaurantCard(restaurant = nextRestaurant, modifier = Modifier)
                 }
             }
 
-            // Draw the TOP card with gesture detection
+            // The interactive card with all the dragging and tilting logic
             Box(
                 modifier = Modifier
                     .offset { IntOffset(offsetX.value.roundToInt(), offsetY.value.roundToInt()) }
                     .graphicsLayer {
-                        // Tilt the card slightly as it is dragged left or right
                         rotationZ = (offsetX.value / 60).coerceIn(-15f, 15f)
                     }
                     .pointerInput(Unit) {
@@ -92,15 +91,15 @@ fun SwipeScreen(
                             onDragEnd = {
                                 coroutineScope.launch {
                                     if (offsetX.value > swipeThreshold) {
-                                        // User dragged far enough right -> Swipe Right
+                                        // Animate off-screen to the right
                                         offsetX.animateTo(screenWidth * 1.5f, tween(300))
                                         onSwipeRight(topRestaurant)
                                     } else if (offsetX.value < -swipeThreshold) {
-                                        // User dragged far enough left -> Swipe Left
+                                        // Animate off-screen to the left
                                         offsetX.animateTo(-screenWidth * 1.5f, tween(300))
                                         onSwipeLeft()
                                     } else {
-                                        // Didn't drag far enough -> Snap back to center
+                                        // Snap back to the middle if the drag was too short
                                         launch { offsetX.animateTo(0f, tween(300)) }
                                         launch { offsetY.animateTo(0f, tween(300)) }
                                     }
@@ -109,7 +108,6 @@ fun SwipeScreen(
                             onDrag = { change, dragAmount ->
                                 change.consume()
                                 coroutineScope.launch {
-                                    // Update the offset as the finger moves
                                     offsetX.snapTo(offsetX.value + dragAmount.x)
                                     offsetY.snapTo(offsetY.value + dragAmount.y)
                                 }
@@ -121,7 +119,7 @@ fun SwipeScreen(
             }
         }
 
-        // We kept the buttons so users can tap OR swipe!
+        // Action buttons at the bottom for people who prefer tapping over swiping
         Row(
             modifier = Modifier
                 .fillMaxWidth()

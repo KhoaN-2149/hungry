@@ -1,5 +1,3 @@
-//com/csci448/khoa_nguyen/hungry/HungryApp.kt
-
 package com.csci448.khoa_nguyen.hungry
 
 import androidx.compose.foundation.layout.padding
@@ -14,21 +12,23 @@ import com.csci448.khoa_nguyen.hungry.ui.navigation.Screen
 import com.csci448.khoa_nguyen.hungry.ui.navigation.bottomNavItems
 import com.csci448.khoa_nguyen.hungry.ui.navigation.HungryNavGraph
 
+// This is the main shell of the app that holds the navigation and the bottom bar
 @Composable
 fun HungryApp() {
     val navController = rememberNavController()
 
-    // Find out exactly what screen we are currently looking at
+    // Keep track of the current screen to decide what to show
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
     Scaffold(
         bottomBar = {
-            // THE TRICK: Only draw the NavigationBar if we are NOT on the Login screen
+            // Only show the bottom menu if the user isn't on the login screen
             if (currentRoute != Screen.Login.route) {
                 NavigationBar {
                     val currentDestination = navBackStackEntry?.destination
 
+                    // Create a button for every item in our bottom nav list
                     bottomNavItems.forEach { screen ->
                         NavigationBarItem(
                             icon = { Icon(screen.icon, contentDescription = screen.title) },
@@ -49,6 +49,7 @@ fun HungryApp() {
             }
         }
     ) { innerPadding ->
+        // This is where the actual screen content is displayed
         HungryNavGraph(
             navController = navController,
             modifier = Modifier.padding(innerPadding)

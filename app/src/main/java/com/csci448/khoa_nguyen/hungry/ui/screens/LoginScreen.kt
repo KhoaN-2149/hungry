@@ -11,6 +11,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.csci448.khoa_nguyen.hungry.ui.viewmodels.AuthState
 
+// This is the entry point where users can log in, sign up, or just browse as a guest
 @Composable
 fun LoginScreen(
     authState: AuthState,
@@ -18,7 +19,7 @@ fun LoginScreen(
     onSignUpClick: (String, String) -> Unit,
     onGuestClick: () -> Unit
 ) {
-    // Local state to hold what the user is typing
+    // Just keeping track of what the user types into the boxes
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -30,6 +31,7 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(32.dp)
         ) {
+            // Big red branding title at the top
             Text(
                 text = "Hungry",
                 style = MaterialTheme.typography.displayLarge,
@@ -39,7 +41,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Email Field
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -50,7 +51,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Password Field
+            // Text field that hides the characters for security
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -60,7 +61,7 @@ fun LoginScreen(
                 singleLine = true
             )
 
-            // Error Message Display
+            // Show a little error message if something went wrong during login
             if (authState is AuthState.Error) {
                 Text(
                     text = authState.message,
@@ -72,7 +73,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Loading Spinner OR Buttons
+            // Switch between showing the buttons or a loading spinner while waiting
             if (authState is AuthState.Loading) {
                 CircularProgressIndicator(color = Color(0xFFD32F2F))
             } else {
@@ -98,6 +99,7 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                // For users who don't want to create an account right away
                 TextButton(onClick = onGuestClick) {
                     Text("Continue as Guest", color = Color.Gray)
                 }

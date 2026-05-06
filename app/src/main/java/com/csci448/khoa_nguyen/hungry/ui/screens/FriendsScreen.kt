@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.csci448.khoa_nguyen.hungry.data.models.User
 import com.csci448.khoa_nguyen.hungry.ui.viewmodels.FriendRequest
 
+// The main screen for managing your social list and finding new people
 @Composable
 fun FriendsScreen(
     usersList: List<User>,
@@ -28,12 +29,12 @@ fun FriendsScreen(
     onAddFriendClick: (User) -> Unit,
     onAcceptRequest: (String) -> Unit,
     onDenyRequest: (String) -> Unit,
-    onFriendClick: (User) -> Unit // Navigates to Friend's Favorites
+    onFriendClick: (User) -> Unit
 ) {
     var searchText by remember { mutableStateOf("") }
     val sentRequests = remember { mutableStateListOf<String>() }
 
-    // Filter out people who are already your friends from the "Find Friends" search
+    // Filter out existing friends so you only search for new people to add
     val filteredUsers = usersList.filter { user ->
         (user.displayName.contains(searchText, ignoreCase = true) ||
                 user.email.contains(searchText, ignoreCase = true)) &&
@@ -54,7 +55,7 @@ fun FriendsScreen(
         )
 
         LazyColumn {
-            // --- Pending Requests Section ---
+            // Displays any incoming requests that need an answer
             if (pendingRequests.isNotEmpty()) {
                 item {
                     Text("Friend Requests", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 8.dp))
@@ -73,7 +74,7 @@ fun FriendsScreen(
                 item { HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp)) }
             }
 
-            // --- My Friends Section ---
+            // A list of your current friends; clicking one shows their favorites
             if (myFriends.isNotEmpty()) {
                 item {
                     Text("My Friends", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
@@ -85,7 +86,7 @@ fun FriendsScreen(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFD700)) // Gold Star for friends
+                            Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFD700))
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(friend.displayName, fontWeight = FontWeight.Bold)
@@ -97,7 +98,7 @@ fun FriendsScreen(
                 item { HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp)) }
             }
 
-            // --- Find Friends Section ---
+            // Shows other users on the app that you can send requests to
             item {
                 Text("Find Friends", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
             }

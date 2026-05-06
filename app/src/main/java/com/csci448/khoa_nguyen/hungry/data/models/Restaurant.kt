@@ -1,25 +1,26 @@
-//// com/csci448/khoa_nguyen/hungry/data/models/Restaurant.kt
-
 package com.csci448.khoa_nguyen.hungry.data.models
 
+// A simple way to track individual food or drink items
 data class MenuItem(
-    val name: String = "",         // Added default
-    val description: String = "",  // Added default
-    val price: String = ""         // Added default
+    val name: String = "",
+    val description: String = "",
+    val price: String = ""
 )
 
+// The main object for holding all the info about a restaurant
 data class Restaurant(
-    val restId: String = "",       // Added default
-    val name: String = "",         // Added default
-    val location: String = "",     // Added default
-    val imageUrl: String = "",     // Added default
-    val rating: Double = 0.0,      // Added default
-    val price: String = "",        // Added default
+    val restId: String = "",
+    val name: String = "",
+    val location: String = "",
+    val imageUrl: String = "",
+    val rating: Double = 0.0,
+    val price: String = "",
     val menu: List<MenuItem> = emptyList(),
     val xPct: Float = 0f,
     val yPct: Float = 0f
 )
 
+// Some sample data to use for testing the app
 val dummyRestaurants = listOf(
     Restaurant(
         restId = "1",
@@ -110,7 +111,7 @@ val dummyRestaurants = listOf(
         restId = "7",
         name = "Taco Bell",
         location = "S Golden Rd",
-        imageUrl = "https://images.unsplash.com/photo-1599974579688-8dbdd335c77f", // Verified Taco
+        imageUrl = "https://images.unsplash.com/photo-1599974579688-8dbdd335c77f",
         rating = 3.5,
         price = "$",
         xPct = 0.55f, yPct = 0.58f,
@@ -120,7 +121,7 @@ val dummyRestaurants = listOf(
         restId = "10",
         name = "Wendy's",
         location = "W 44th Ave",
-        imageUrl = "https://images.unsplash.com/photo-1550547660-d9450f859349", // Verified Burger
+        imageUrl = "https://images.unsplash.com/photo-1550547660-d9450f859349",
         rating = 3.2,
         price = "$",
         xPct = 0.88f, yPct = 0.10f,

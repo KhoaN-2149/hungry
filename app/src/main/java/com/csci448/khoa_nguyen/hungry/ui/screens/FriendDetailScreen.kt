@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.csci448.khoa_nguyen.hungry.data.models.Restaurant
 import com.csci448.khoa_nguyen.hungry.ui.components.RestaurantCard
 
+// The screen that shows a friend's saved restaurants and any shared matches you have
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendDetailScreen(
@@ -26,6 +27,7 @@ fun FriendDetailScreen(
 ) {
     Scaffold(
         topBar = {
+            // Setting up the header with the red theme and a back arrow
             TopAppBar(
                 title = { Text("Friend's Favorites") },
                 navigationIcon = {
@@ -34,7 +36,7 @@ fun FriendDetailScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFD32F2F), // HungryRed
+                    containerColor = Color(0xFFD32F2F),
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -49,7 +51,7 @@ fun FriendDetailScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // --- Section 1: Mutual Favorites (Matches!) ---
+            // Show the restaurants both people liked first
             if (mutualFavorites.isNotEmpty()) {
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -68,7 +70,7 @@ fun FriendDetailScreen(
                 item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
             }
 
-            // --- Section 2: All Their Favorites ---
+            // A header for all the other spots they have saved
             item {
                 Text(
                     text = "All Saved Spots",
@@ -78,6 +80,7 @@ fun FriendDetailScreen(
                 )
             }
 
+            // Let the user know if the friend hasn't saved anything yet
             if (friendFavorites.isEmpty()) {
                 item {
                     Box(modifier = Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) {

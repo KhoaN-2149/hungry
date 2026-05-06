@@ -1,4 +1,3 @@
-//com/csci448/khoa_nguyen/hungry/MainActivity.kt
 package com.csci448.khoa_nguyen.hungry
 
 import android.os.Bundle
@@ -16,12 +15,14 @@ import com.csci448.khoa_nguyen.hungry.ui.theme.HungryTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 
+// This is the starting point of the app where everything kicks off
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            HungryTheme { // Your theme name might be slightly different depending on what AS generated
+            // This sets the theme and fills the screen with the main app component
+            HungryTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -33,6 +34,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// Just a basic placeholder function for displaying text
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(
@@ -41,6 +43,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
     )
 }
 
+// Allows for a quick check of the greeting UI without running the whole app
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
