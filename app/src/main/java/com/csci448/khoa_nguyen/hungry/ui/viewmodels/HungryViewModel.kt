@@ -11,6 +11,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
+data class FriendRequest(
+    val fromUid: String = "",
+    val fromEmail: String = "",
+    val status: String = ""
+)
+
 class HungryViewModel : ViewModel() {
 
     private val db = FirebaseFirestore.getInstance()
@@ -20,7 +26,22 @@ class HungryViewModel : ViewModel() {
     private val _allUsers = MutableStateFlow<List<User>>(emptyList())
     val allUsers: StateFlow<List<User>> = _allUsers.asStateFlow()
 
+    private val _myFriends = MutableStateFlow<List<User>>(emptyList())
+    val myFriends: StateFlow<List<User>> = _myFriends.asStateFlow()
+
+    private val _friendFavorites = MutableStateFlow<List<Restaurant>>(emptyList())
+    val friendFavorites: StateFlow<List<Restaurant>> = _friendFavorites.asStateFlow()
+
+    private val _mutualFavorites = MutableStateFlow<List<Restaurant>>(emptyList())
+    val mutualFavorites: StateFlow<List<Restaurant>> = _mutualFavorites.asStateFlow()
+
+    private val _pendingRequests = MutableStateFlow<List<FriendRequest>>(emptyList())
+    val pendingRequests: StateFlow<List<FriendRequest>> = _pendingRequests.asStateFlow()
+
     // --- Profile State ---
+    private val _userBio = MutableStateFlow("Foodie Level: Beginner")
+    val userBio: StateFlow<String> = _userBio.asStateFlow()
+
     private val _isVegetarian = MutableStateFlow(false)
     val isVegetarian: StateFlow<Boolean> = _isVegetarian.asStateFlow()
 
@@ -38,18 +59,20 @@ class HungryViewModel : ViewModel() {
     val currentRestaurants: StateFlow<List<Restaurant>> = _currentRestaurants.asStateFlow()
 
     init {
-        // 1. Fetch the list of all users to search for
         fetchUsers()
 
-        // 2. Listen for Logins/Logouts to fetch user-specific favorites
         auth.addAuthStateListener { firebaseAuth ->
             val user = firebaseAuth.currentUser
             if (user != null) {
-                // User logged in -> Go get their saved favorites from the cloud!
                 fetchFavorites(user.uid)
+                fetchPendingRequests(user.uid)
+                fetchUserBio(user.uid)
+                fetchMyFriends(user.uid)
             } else {
-                // User logged out -> Clear the screen
                 _favorites.value = emptyList()
+                _pendingRequests.value = emptyList()
+                _myFriends.value = emptyList()
+                _userBio.value = "Foodie Level: Beginner"
             }
         }
     }
@@ -66,8 +89,18 @@ class HungryViewModel : ViewModel() {
         }
     }
 
+    private fun fetchMyFriends(uid: String) {
+        db.collection("users").document(uid).collection("friends")
+            .addSnapshotListener { snapshot, _ ->
+                if (snapshot != null) {
+                    val friendIds = snapshot.documents.mapNotNull { it.getString("friendUid") }
+                    // Filter the allUsers list to find only those who are in our friends sub-collection
+                    _myFriends.value = _allUsers.value.filter { it.uid in friendIds }
+                }
+            }
+    }
+
     private fun fetchFavorites(uid: String) {
-        // Add a real-time listener to the user's personal favorites folder
         db.collection("users").document(uid).collection("favorites")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
@@ -80,7 +113,44 @@ class HungryViewModel : ViewModel() {
             }
     }
 
-    // --- Actions ---
+    private fun fetchPendingRequests(uid: String) {
+        db.collection("users").document(uid).collection("friend_requests")
+            .whereEqualTo("status", "pending")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                if (snapshot != null) {
+                    val requests = snapshot.documents.mapNotNull { it.toObject(FriendRequest::class.java) }
+                    _pendingRequests.value = requests
+                }
+            }
+    }
+
+    private fun fetchUserBio(uid: String) {
+        db.collection("users").document(uid).addSnapshotListener { snapshot, error ->
+            if (error == null && snapshot != null && snapshot.exists()) {
+                val bio = snapshot.getString("bio") ?: "Foodie Level: Beginner"
+                _userBio.value = bio
+            }
+        }
+    }
+
+    fun loadFriendData(friendUid: String) {
+        db.collection("users").document(friendUid).collection("favorites")
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val faves = snapshot.documents.mapNotNull { it.toObject(Restaurant::class.java) }
+                _friendFavorites.value = faves
+
+                val myIds = _favorites.value.map { it.restId }.toSet()
+                _mutualFavorites.value = faves.filter { it.restId in myIds }
+            }
+    }
+
+    fun updateBio(newBio: String) {
+        val uid = auth.currentUser?.uid ?: return
+        db.collection("users").document(uid).update("bio", newBio)
+    }
+
     fun updateVegetarian(isVeg: Boolean) { _isVegetarian.value = isVeg }
     fun updateSpicyOnly(isSpicy: Boolean) { _isSpicyOnly.value = isSpicy }
     fun updateGlutenFree(isGluten: Boolean) { _isGlutenFree.value = isGluten }
@@ -88,13 +158,10 @@ class HungryViewModel : ViewModel() {
     fun swipeRight(restaurant: Restaurant) {
         val uid = auth.currentUser?.uid
         if (uid != null) {
-            // OPTION 1 LOGIC: Save the swiped restaurant straight to Firestore!
-            // Because we set up a snapshot listener above, the UI will automatically update.
             db.collection("users").document(uid).collection("favorites")
-                .document(restaurant.restId) // Use the restaurant ID as the document name
+                .document(restaurant.restId)
                 .set(restaurant)
         } else {
-            // Fallback for "Guest" users who aren't logged in
             if (!_favorites.value.contains(restaurant)) {
                 _favorites.update { currentList -> currentList + restaurant }
             }
@@ -112,21 +179,38 @@ class HungryViewModel : ViewModel() {
         }
     }
 
-    // OPTION 2 LOGIC: Send a Friend Request
     fun sendFriendRequest(targetUser: User) {
         val currentUser = auth.currentUser
         if (currentUser != null) {
-            // Create a little package of data to send to the other user
             val requestData = hashMapOf(
                 "fromUid" to currentUser.uid,
                 "fromEmail" to currentUser.email,
                 "status" to "pending"
             )
-
-            // Save it in the TARGET user's database profile
             db.collection("users").document(targetUser.uid)
                 .collection("friend_requests").document(currentUser.uid)
                 .set(requestData)
         }
+    }
+
+    fun acceptFriendRequest(requestUid: String) {
+        val uid = auth.currentUser?.uid ?: return
+
+        // 1. Mark request as accepted in your folder
+        db.collection("users").document(uid).collection("friend_requests").document(requestUid)
+            .update("status", "accepted")
+
+        // 2. Add to your friends list
+        val friendDataForMe = hashMapOf("friendUid" to requestUid, "addedAt" to System.currentTimeMillis())
+        db.collection("users").document(uid).collection("friends").document(requestUid).set(friendDataForMe)
+
+        // 3. Add you to their friends list (Mutual friendship)
+        val friendDataForThem = hashMapOf("friendUid" to uid, "addedAt" to System.currentTimeMillis())
+        db.collection("users").document(requestUid).collection("friends").document(uid).set(friendDataForThem)
+    }
+
+    fun denyFriendRequest(requestUid: String) {
+        val uid = auth.currentUser?.uid ?: return
+        db.collection("users").document(uid).collection("friend_requests").document(requestUid).delete()
     }
 }

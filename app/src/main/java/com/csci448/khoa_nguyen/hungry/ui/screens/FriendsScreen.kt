@@ -6,27 +6,38 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.csci448.khoa_nguyen.hungry.data.models.User
+import com.csci448.khoa_nguyen.hungry.ui.viewmodels.FriendRequest
 
 @Composable
 fun FriendsScreen(
     usersList: List<User>,
-    onAddFriendClick: (User) -> Unit // NEW: Pass the click event up to the NavGraph!
+    myFriends: List<User>,
+    pendingRequests: List<FriendRequest>,
+    onAddFriendClick: (User) -> Unit,
+    onAcceptRequest: (String) -> Unit,
+    onDenyRequest: (String) -> Unit,
+    onFriendClick: (User) -> Unit // Navigates to Friend's Favorites
 ) {
     var searchText by remember { mutableStateOf("") }
-
-    // NEW: Keep track of who we just sent a request to so we can update the button UI
     val sentRequests = remember { mutableStateListOf<String>() }
 
-    val filteredUsers = usersList.filter {
-        it.displayName.contains(searchText, ignoreCase = true) ||
-                it.email.contains(searchText, ignoreCase = true)
+    // Filter out people who are already your friends from the "Find Friends" search
+    val filteredUsers = usersList.filter { user ->
+        (user.displayName.contains(searchText, ignoreCase = true) ||
+                user.email.contains(searchText, ignoreCase = true)) &&
+                myFriends.none { it.uid == user.uid }
     }
 
     Column(
@@ -39,84 +50,73 @@ fun FriendsScreen(
             value = searchText,
             onValueChange = { searchText = it },
             label = { Text("Search for friends...") },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                focusedLabelColor = MaterialTheme.colorScheme.primary,
-                cursorColor = MaterialTheme.colorScheme.primary
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 12.dp)
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
         )
 
-        if (usersList.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No other users found yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        LazyColumn {
+            // --- Pending Requests Section ---
+            if (pendingRequests.isNotEmpty()) {
+                item {
+                    Text("Friend Requests", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 8.dp))
+                }
+                items(pendingRequests) { request ->
+                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = request.fromEmail, fontWeight = FontWeight.SemiBold)
+                            Row {
+                                IconButton(onClick = { onAcceptRequest(request.fromUid) }) { Icon(Icons.Default.Check, "Accept", tint = Color(0xFF388E3C)) }
+                                IconButton(onClick = { onDenyRequest(request.fromUid) }) { Icon(Icons.Default.Close, "Deny", tint = MaterialTheme.colorScheme.error) }
+                            }
+                        }
+                    }
+                }
+                item { HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp)) }
             }
-        } else {
-            LazyColumn {
-                items(filteredUsers) { user ->
 
-                    // Check if we already sent a request to this specific user during this session
-                    val isSent = sentRequests.contains(user.uid)
-
+            // --- My Friends Section ---
+            if (myFriends.isNotEmpty()) {
+                item {
+                    Text("My Friends", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+                }
+                items(myFriends) { friend ->
                     Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp)
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        onClick = { onFriendClick(friend) },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = "Avatar Placeholder",
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
+                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFD700)) // Gold Star for friends
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(friend.displayName, fontWeight = FontWeight.Bold)
+                                Text("View their favorites", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                            }
+                        }
+                    }
+                }
+                item { HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp)) }
+            }
+
+            // --- Find Friends Section ---
+            item {
+                Text("Find Friends", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+            }
+            if (filteredUsers.isEmpty()) {
+                item { Text("No other users found.", modifier = Modifier.padding(8.dp), color = Color.Gray) }
+            } else {
+                items(filteredUsers) { user ->
+                    val isSent = sentRequests.contains(user.uid)
+                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.size(48.dp).background(MaterialTheme.colorScheme.secondaryContainer, CircleShape), contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.Person, null)
                             }
                             Spacer(modifier = Modifier.width(12.dp))
-                            Column(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = user.displayName,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                                Text(
-                                    text = user.bio,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(text = user.displayName, style = MaterialTheme.typography.titleMedium)
+                                Text(text = user.bio, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
                             }
-                            Button(
-                                onClick = {
-                                    if (!isSent) {
-                                        onAddFriendClick(user) // Send to database!
-                                        sentRequests.add(user.uid) // Update local UI state
-                                    }
-                                },
-                                enabled = !isSent, // Disable button if already sent
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                                    disabledContainerColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.12f),
-                                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
-                                )
-                            ) {
-                                // Change text from "Add" to "Sent"
+                            Button(onClick = { if (!isSent) { onAddFriendClick(user); sentRequests.add(user.uid) } }, enabled = !isSent) {
                                 Text(if (isSent) "Sent" else "Add")
                             }
                         }

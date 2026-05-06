@@ -2,9 +2,7 @@ package com.csci448.khoa_nguyen.hungry.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -24,24 +22,23 @@ fun RestaurantCard(restaurant: Restaurant, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.85f), // Padding removed here so the swipe stack layers correctly
+            .wrapContentHeight(), // Changed from fillMaxHeight to wrapContentHeight
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        Column(
-            modifier = Modifier.verticalScroll(rememberScrollState())
-        ) {
+        // REMOVED: .verticalScroll(rememberScrollState())
+        // This prevents the "infinity maximum height constraints" crash
+        Column {
 
-            // Coil AsyncImage replaces the Box placeholder
             AsyncImage(
                 model = restaurant.imageUrl,
                 contentDescription = "${restaurant.name} image",
-                contentScale = ContentScale.Crop, // Ensures the image fills the space beautifully
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(250.dp)
-                    .background(Color.LightGray) // Shows a gray background while loading
+                    .background(Color.LightGray)
             )
 
             // Header Info (Name, Rating, Price)
@@ -89,7 +86,10 @@ fun RestaurantCard(restaurant: Restaurant, modifier: Modifier = Modifier) {
 
                     restaurant.menu.forEach { item ->
                         MenuItemRow(item)
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.LightGray)
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            color = Color.LightGray
+                        )
                     }
                 }
             }

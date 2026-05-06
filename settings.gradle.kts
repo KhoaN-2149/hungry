@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Hungry"
 include(":app")
- 
+include(":mylibrary")

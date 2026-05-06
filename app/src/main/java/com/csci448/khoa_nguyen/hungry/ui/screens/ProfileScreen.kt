@@ -4,9 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,15 +19,20 @@ import com.csci448.khoa_nguyen.hungry.ui.theme.HungryTheme
 
 @Composable
 fun ProfileScreen(
-    username: String,               // Add this
+    username: String,
+    currentBio: String,             // Added
     isVegetarian: Boolean,
     isSpicyOnly: Boolean,
     isGlutenFree: Boolean,
     onVegetarianChanged: (Boolean) -> Unit,
     onSpicyOnlyChanged: (Boolean) -> Unit,
     onGlutenFreeChanged: (Boolean) -> Unit,
-    onLogout: () -> Unit            // Add this
+    onUpdateBio: (String) -> Unit,  // Added
+    onLogout: () -> Unit
 ) {
+    var showBioDialog by remember { mutableStateOf(false) }
+    var tempBioText by remember { mutableStateOf(currentBio) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -45,17 +50,17 @@ fun ProfileScreen(
                 .background(MaterialTheme.colorScheme.primaryContainer),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "Dummy Profile Picture",
-                modifier = Modifier.size(80.dp),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            Text(
+                text = "KN",
+                fontSize = 40.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Username & Stuff
+        // Username
         Text(
             text = username,
             fontSize = 28.sp,
@@ -63,11 +68,25 @@ fun ProfileScreen(
             color = MaterialTheme.colorScheme.onBackground
         )
 
-        Text(
-            text = "Foodie Level: Expert",
-            fontSize = 16.sp,
-            color = Color.Gray
-        )
+        // Editable Bio
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = currentBio,
+                fontSize = 16.sp,
+                color = Color.Gray
+            )
+            IconButton(onClick = {
+                tempBioText = currentBio
+                showBioDialog = true
+            }) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit Bio",
+                    modifier = Modifier.size(16.dp),
+                    tint = Color.Gray
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(48.dp))
 
@@ -130,6 +149,30 @@ fun ProfileScreen(
             }
         }
     }
+
+    if (showBioDialog) {
+        AlertDialog(
+            onDismissRequest = { showBioDialog = false },
+            title = { Text("Edit Bio") },
+            text = {
+                OutlinedTextField(
+                    value = tempBioText,
+                    onValueChange = { tempBioText = it },
+                    singleLine = true,
+                    label = { Text("Short Bio") }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    onUpdateBio(tempBioText)
+                    showBioDialog = false
+                }) { Text("Save") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showBioDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
 }
 
 @Composable
@@ -161,13 +204,15 @@ fun ProfileScreenPreview() {
     HungryTheme {
         ProfileScreen(
             username = "Guest",
+            currentBio = "Foodie Level: Expert",
             isVegetarian = false,
             isSpicyOnly = true,
             isGlutenFree = false,
             onVegetarianChanged = {},
             onSpicyOnlyChanged = {},
             onGlutenFreeChanged = {},
-            onLogout = {} // Added empty lambda
+            onUpdateBio = {},
+            onLogout = {}
         )
     }
 }
